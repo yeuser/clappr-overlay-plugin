@@ -1,0 +1,39 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <link rel="stylesheet" href="/dist/bootstrap.min.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="/dist/bootstrap-theme.min.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="/dist/style.css" type="text/css" media="screen" charset="utf-8">
+
+  <link rel="shortcut icon" type="image/png" href="/dist/favico.png">
+
+  <script type="text/javascript" src="/dist/clappr.js"></script>
+  <script type="text/javascript" charset="utf-8" src="/dist/overlay_buttons.js"></script>
+  <title>Overlay Buttons Test Page</title>
+</head>
+<body>
+<section class="container">
+  <div class="main">
+    <div id="output">
+      <div id="player-wrapper" class="player"></div>
+    </div>
+  </div>
+</section>
+<footer class="footer"></footer>
+</div>
+<script type="text/javascript" charset="utf-8">
+  window.onload = function () {
+    var player = new Clappr.Player({
+      source: 'http://192.168.1.232/vid/kGaNeXIrdFHOvBpqqJUzkZWeJzADMFoDhCohuloX/smil:video.smil/playlist.m3u8',
+      parentId: '#player-wrapper',
+      plugins: {
+        container: [OverlayButtons]
+      }
+    });
+  }
+</script>
+</body>
+</html>
+

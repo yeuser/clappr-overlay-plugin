@@ -26,7 +26,8 @@
 <script type="text/javascript" charset="utf-8">
   window.onload = function () {
     var player = new Clappr.Player({
-      source: 'http://192.168.1.232/vid/kGaNeXIrdFHOvBpqqJUzkZWeJzADMFoDhCohuloX/smil:video.smil/playlist.m3u8',
+//      source: 'http://192.168.1.232/vid/kGaNeXIrdFHOvBpqqJUzkZWeJzADMFoDhCohuloX/smil:video.smil/playlist.m3u8',
+      source: 'https://bitdash-a.akamaihd.net/content/MI201109210084_1/m3u8s/f08e80da-bf1d-4e3d-8899-f0f6155f6efa.m3u8',
       parentId: '#player-wrapper',
       plugins: {
         container: [OverlayButtons]
@@ -35,15 +36,20 @@
         schedule: [
           {
             start: 60,
-            wait: 10,
             limit: 1,
             rows: [
               {
                 height: .41,
                 cols: [{
                   width: .9,
-                  text: "آیا این خوب بود؟"
-                }]
+                  text: "آیا این خوب بود؟",
+                  style :{
+                    background:'#a15',
+                  }
+                }],
+                style :{
+                  background:'#1b1',
+                }
               },
               {
                 height: .41,
@@ -55,6 +61,12 @@
                     run: () => {
                       console.log('yes', arguments);
                       return true;
+                    },
+                    style :{
+                      background:'#001',
+                    },
+                    styleHover :{
+                      background:'#fff',
                     }
                   },
                   {
@@ -68,7 +80,10 @@
                   }
                 ]
               }
-            ]
+            ],
+            style :{
+                background:'#115',
+            }
           },
           {
             start: 120,

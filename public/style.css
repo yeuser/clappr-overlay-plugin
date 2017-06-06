@@ -19,5 +19,5 @@ div.clappr-overlay-container {
   width: auto;
   height: auto;
   position: fixed;
-  background: magenta;
+  background: rgba(63, 63, 63, 0.51);
 }

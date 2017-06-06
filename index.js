@@ -31,7 +31,7 @@ class OverlayButtons extends Clappr.UIContainerPlugin {
       this._layouts[s.index].show();
       this.container.playback.pause();
       const that = this;
-      this._scheduled = window.setTimeout(() => that._playOn(), s.wait * 1000);
+      if (s.wait > 0) this._scheduled = window.setTimeout(() => that._playOn(), s.wait * 1000);
     });
   }
 
@@ -48,6 +48,21 @@ class OverlayButtons extends Clappr.UIContainerPlugin {
     const defaultElementHtml = "<div style='width:100%;height:100%;display:inline-block;float:left'></div>";
     this.$el.html(JST.overlay_buttons());
     this.$el.click(e => e.stopPropagation());
+    function applyStyles(elem, style) {
+      if (style)
+        for (let key in style)
+          if (style.hasOwnProperty(key))
+            elem.css(key, style[key]);
+    }
+
+    function removeStyles(elem, style) {
+      if (style)
+        for (let key in style)
+          if (style.hasOwnProperty(key))
+            if (elem.css(key) == style[key])
+              elem.css(key, '');
+    }
+
     function mkDivisions(container, dim, list, callback) {
       let sum = 0.0;
       list.forEach(row => {
@@ -67,6 +82,7 @@ class OverlayButtons extends Clappr.UIContainerPlugin {
         let itemElemInner = $(defaultElementHtml)
           .css(dim, '100%');
         itemEl.append(itemElemInner);
+        applyStyles(itemEl, item.style);
         container.append(itemEl);
         if (callback) callback(item, itemElemInner);
       });
@@ -84,7 +100,7 @@ class OverlayButtons extends Clappr.UIContainerPlugin {
       else if (schedule.limit >= 1)
         schedule.limit = Math.floor(schedule.limit);
       schedule.start = Math.floor(schedule.start);
-      schedule.wait = schedule.wait || 5;
+      schedule.wait = schedule.wait || -1;
       if (!schedules[schedule.start])
         schedules[schedule.start] = schedule;
       else
@@ -99,14 +115,17 @@ class OverlayButtons extends Clappr.UIContainerPlugin {
 
     let layouts = this._layouts = [];
 
+    let containerP = this.$el.find(".clappr-overlay-container");
+    let container = $(defaultElementHtml);
+    containerP.append(container);
     this._options.schedules.forEach(schedule => {
-      let container = this.$el.find(".clappr-overlay-container");
       let elmContainer = $(defaultElementHtml);
       container.append(elmContainer);
       layouts[schedule.index] = elmContainer;
+      applyStyles(container, schedule.style);
       mkDivisions(elmContainer, 'height', schedule.rows, (row, rowInner) => {
         mkDivisions(rowInner, 'width', row.cols, (item, container) => {
-          let elem = $("<div style='display:inline-block;float:left;font-size: 20px;position: relative;direction: rtl;top: 50%;left: 50%;transform: translate(-50%,-50%)'></div>")
+          let elem = $("<div style='display:inline-block;float:left;font-size:20px;position:relative;direction:rtl;top:50%;left:50%;transform:translate(-50%,-50%)'></div>");
           container.append(elem);
           elem.text(item.text);
           if (item.isButton && item.run) {
@@ -116,10 +135,13 @@ class OverlayButtons extends Clappr.UIContainerPlugin {
               if (run === undefined || !!run) that._playOn();
             });
             container.mouseenter(e => {
-              container.css('border', 'white').css('background', 'lightgray')
+              container.css('border', 'white').css('background', 'lightgray');
+              applyStyles(container, item.styleHover);
             });
             container.mouseleave(e => {
-              container.css('border', '').css('background', '')
+              container.css('border', '').css('background', '');
+              removeStyles(container, item.styleHover);
+              applyStyles(container, item.style);
             });
           }
         });

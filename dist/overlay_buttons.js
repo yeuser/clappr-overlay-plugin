@@ -59,7 +59,7 @@ var OverlayButtons = (function (_Clappr$UIContainerPlugin) {
           _this._layouts[s.index].show();
           _this.container.playback.pause();
           var that = _this;
-          _this._scheduled = window.setTimeout(function () {
+          if (s.wait > 0) _this._scheduled = window.setTimeout(function () {
             return that._playOn();
           }, s.wait * 1000);
         });
@@ -76,13 +76,23 @@ var OverlayButtons = (function (_Clappr$UIContainerPlugin) {
     },
     render: {
       value: function render() {
-        var _this = this;
-
         var defaultElementHtml = "<div style='width:100%;height:100%;display:inline-block;float:left'></div>";
         this.$el.html(JST.overlay_buttons());
         this.$el.click(function (e) {
           return e.stopPropagation();
         });
+        function applyStyles(elem, style) {
+          if (style) for (var key in style) {
+            if (style.hasOwnProperty(key)) elem.css(key, style[key]);
+          }
+        }
+
+        function removeStyles(elem, style) {
+          if (style) for (var key in style) {
+            if (style.hasOwnProperty(key)) if (elem.css(key) == style[key]) elem.css(key, "");
+          }
+        }
+
         function mkDivisions(container, dim, list, callback) {
           var sum = 0;
           list.forEach(function (row) {
@@ -99,6 +109,7 @@ var OverlayButtons = (function (_Clappr$UIContainerPlugin) {
             var itemEl = $(defaultElementHtml).css(dim, item[dim] * 100 / sum + "%");
             var itemElemInner = $(defaultElementHtml).css(dim, "100%");
             itemEl.append(itemElemInner);
+            applyStyles(itemEl, item.style);
             container.append(itemEl);
             if (callback) callback(item, itemElemInner);
           });
@@ -111,7 +122,7 @@ var OverlayButtons = (function (_Clappr$UIContainerPlugin) {
           schedule.lock = false;
           if (!schedule.limit) schedule.limit = 0;else if (schedule.limit < 0) schedule.limit = -1;else if (schedule.limit >= 1) schedule.limit = Math.floor(schedule.limit);
           schedule.start = Math.floor(schedule.start);
-          schedule.wait = schedule.wait || 5;
+          schedule.wait = schedule.wait || -1;
           if (!schedules[schedule.start]) schedules[schedule.start] = schedule;else console.error("duplicate start-time:" + schedule.start);
         });
         this._options.schedules = [];
@@ -123,14 +134,17 @@ var OverlayButtons = (function (_Clappr$UIContainerPlugin) {
 
         var layouts = this._layouts = [];
 
+        var containerP = this.$el.find(".clappr-overlay-container");
+        var container = $(defaultElementHtml);
+        containerP.append(container);
         this._options.schedules.forEach(function (schedule) {
-          var container = _this.$el.find(".clappr-overlay-container");
           var elmContainer = $(defaultElementHtml);
           container.append(elmContainer);
           layouts[schedule.index] = elmContainer;
+          applyStyles(container, schedule.style);
           mkDivisions(elmContainer, "height", schedule.rows, function (row, rowInner) {
             mkDivisions(rowInner, "width", row.cols, function (item, container) {
-              var elem = $("<div style='display:inline-block;float:left;font-size: 20px;position: relative;direction: rtl;top: 50%;left: 50%;transform: translate(-50%,-50%)'></div>");
+              var elem = $("<div style='display:inline-block;float:left;font-size:20px;position:relative;direction:rtl;top:50%;left:50%;transform:translate(-50%,-50%)'></div>");
               container.append(elem);
               elem.text(item.text);
               if (item.isButton && item.run) {
@@ -141,9 +155,12 @@ var OverlayButtons = (function (_Clappr$UIContainerPlugin) {
                 });
                 container.mouseenter(function (e) {
                   container.css("border", "white").css("background", "lightgray");
+                  applyStyles(container, item.styleHover);
                 });
                 container.mouseleave(function (e) {
                   container.css("border", "").css("background", "");
+                  removeStyles(container, item.styleHover);
+                  applyStyles(container, item.style);
                 });
               }
             });
@@ -188,7 +205,7 @@ module.exports = {
 
   CSS: {
 
-    overlay_buttons: "div.clappr-overlay{font-size:100px;color:#fff;background-color:rgba(134,134,134,.68);position:fixed;z-index:1;width:100%;height:100%;box-shadow:inset 0 0 10px 16px #000;text-shadow:0 0 6px #000;cursor:initial}div.clappr-overlay-container{top:10px;bottom:10px;left:10px;right:10px;width:auto;height:auto;position:fixed;background:#ff00ff}" }
+    overlay_buttons: "div.clappr-overlay{font-size:100px;color:#fff;background-color:rgba(134,134,134,.68);position:fixed;z-index:1;width:100%;height:100%;box-shadow:inset 0 0 10px 16px #000;text-shadow:0 0 6px #000;cursor:initial}div.clappr-overlay-container{top:10px;bottom:10px;left:10px;right:10px;width:auto;height:auto;position:fixed;background:rgba(63,63,63,.51)}" }
 };
 
 },{"lodash.template":36}],3:[function(require,module,exports){

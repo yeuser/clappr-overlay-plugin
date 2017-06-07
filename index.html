@@ -43,12 +43,12 @@
                 cols: [{
                   width: .9,
                   text: "آیا این خوب بود؟",
-                  style :{
-                    background:'#a15',
+                  style: {
+                    background: '#a15',
                   }
                 }],
-                style :{
-                  background:'#1b1',
+                style: {
+                  background: '#1b1',
                 }
               },
               {
@@ -62,27 +62,28 @@
                       console.log('yes', arguments);
                       return true;
                     },
-                    style :{
-                      background:'#001',
+                    style: {
+                      background: '#001',
                     },
-                    styleHover :{
-                      background:'#fff',
+                    styleHover: {
+                      background: '#fff',
                     }
                   },
                   {
                     width: .3,
                     text: "خیر خوب نیست!",
                     isButton: true,
-                    run: () => {
+                    run: (player) => {
                       console.log('no', arguments);
+                      setTimeout(function() {player.seek(30);}, 50);
                       return true;
                     }
                   }
                 ]
               }
             ],
-            style :{
-                background:'#115',
+            style: {
+              background: '#115',
             }
           },
           {
@@ -119,6 +120,23 @@
                     }
                   }
                 ]
+              }
+            ]
+          },
+          {
+            layout: 'cellular',
+            start: 1,
+            end: 10,
+            cells: [
+              {
+                left: .05,
+                top: .41,
+                height: .41,
+                width: .9,
+                text: "محل تبلیغات",
+                style: {
+                  background: 'blue'
+                }
               }
             ]
           }

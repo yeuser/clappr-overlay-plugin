@@ -36,26 +36,22 @@ var OverlayButtons = (function (_Clappr$UIContainerPlugin) {
         var _this = this;
 
         var currentSecond = Math.floor(timeProgress.current);
-        this._options.schedules = this._options.schedules.filter(function (s) {
-          return s.limit != 0;
-        });
-        this._options.schedules.filter(function (s) {
-          return s.start < currentSecond || s.start > currentSecond + 1;
+        this._options.schedules.tabular.filter(function (s) {
+          return s.start > currentSecond || s.start + 1 <= currentSecond;
         }).forEach(function (s) {
-          return s.lock = false;
+          s.showing = false;
+          s.justShown = false;
+          _this._layouts[s.index].hide();
         });
-        this._options.schedules.filter(function (s) {
-          return s.start >= currentSecond && s.start < currentSecond + 1;
+        this._options.schedules.tabular.filter(function (s) {
+          return s.start <= currentSecond && s.start + 1 > currentSecond;
         }).filter(function (s) {
-          return !s.lock;
+          return !s.justShown;
         }).forEach(function (s) {
           if (s.limit > 0) s.limit -= 1;
-          s.lock = true;
-          _this.$el.show();
+          s.showing = true;
+          s.justShown = true;
           _this.container.disableMediaControl();
-          _this._layouts.forEach(function (l) {
-            return l.hide();
-          });
           _this._layouts[s.index].show();
           _this.container.playback.pause();
           var that = _this;
@@ -63,10 +59,39 @@ var OverlayButtons = (function (_Clappr$UIContainerPlugin) {
             return that._playOn();
           }, s.wait * 1000);
         });
+
+        this._options.schedules.cellular.filter(function (s) {
+          return s.start <= timeProgress.current && s.end >= timeProgress.current;
+        }).forEach(function (s) {
+          if (s.limit > 0) s.limit -= 1;
+          _this._layouts[s.index].show();
+        });
+        this._options.schedules.cellular.filter(function (s) {
+          return s.start > timeProgress.current || s.end < timeProgress.current;
+        }).forEach(function (s) {
+          _this._layouts[s.index].hide();
+        });
+        var showTabular = this._options.schedules.tabular.filter(function (s) {
+          return s.showing;
+        }).length > 0;
+        var showCellular = this._options.schedules.cellular.filter(function (s) {
+          return s.start <= timeProgress.current && s.end >= timeProgress.current;
+        }).length > 0;
+        if (showTabular || showCellular) this.$el.show();else this.$el.hide();
+        if (showTabular) this.$el.find(".clappr-overlay").show();else this.$el.find(".clappr-overlay").hide();
+        if (showCellular) this.$el.find(".clappr-overlay-fixed").show();else this.$el.find(".clappr-overlay-fixed").hide();
       }
     },
     _playOn: {
       value: function _playOn() {
+        this._options.schedules.tabular.filter(function (s) {
+          return s.showing;
+        }).forEach(function (s) {
+          return s.showing = false;
+        });
+        this._options.schedules.tabular = this._options.schedules.tabular.filter(function (s) {
+          return s.limit != 0;
+        });
         if (this._scheduled) window.clearTimeout(this._scheduled);
         this._scheduled = undefined;
         this.$el.hide();
@@ -117,40 +142,45 @@ var OverlayButtons = (function (_Clappr$UIContainerPlugin) {
 
         var that = this;
 
-        var schedules = {};
+        var layoutOptions = {};
         this._options.schedule.forEach(function (schedule) {
-          schedule.lock = false;
+          schedule.showing = false;
           if (!schedule.limit) schedule.limit = 0;else if (schedule.limit < 0) schedule.limit = -1;else if (schedule.limit >= 1) schedule.limit = Math.floor(schedule.limit);
           schedule.start = Math.floor(schedule.start);
           schedule.wait = schedule.wait || -1;
-          if (!schedules[schedule.start]) schedules[schedule.start] = schedule;else console.error("duplicate start-time:" + schedule.start);
+          schedule.end = schedule.end || +schedule.start + 1;
+          if (!layoutOptions[schedule.start]) layoutOptions[schedule.start] = schedule;else console.error("duplicate start-time:" + schedule.start);
         });
-        this._options.schedules = [];
-        var index = 0;
-        for (var k in schedules) {
-          schedules[k].index = index++;
-          this._options.schedules.push(schedules[k]);
-        }
 
-        var layouts = this._layouts = [];
+        this._options.schedules = { cellular: [], tabular: [] };
+        var index = 0;
+        for (var k in layoutOptions) {
+          layoutOptions[k].index = index++;
+          this._options.schedules[layoutOptions[k].layout == "cellular" ? "cellular" : "tabular"].push(layoutOptions[k]);
+        }
+        for (var k in layoutOptions) {
+          layoutOptions[k].index = index++;
+        }var layouts = this._layouts = [];
 
         var containerP = this.$el.find(".clappr-overlay-container");
         var container = $(defaultElementHtml);
         containerP.append(container);
-        this._options.schedules.forEach(function (schedule) {
+        this._options.schedules.tabular.forEach(function (schedule) {
           var elmContainer = $(defaultElementHtml);
           container.append(elmContainer);
           layouts[schedule.index] = elmContainer;
           applyStyles(container, schedule.style);
           mkDivisions(elmContainer, "height", schedule.rows, function (row, rowInner) {
             mkDivisions(rowInner, "width", row.cols, function (item, container) {
-              var elem = $("<div style='display:inline-block;float:left;font-size:20px;position:relative;direction:rtl;top:50%;left:50%;transform:translate(-50%,-50%)'></div>");
-              container.append(elem);
-              elem.text(item.text);
+              if (item.html) container.append($(item.html));else {
+                var elem = $("<div style='display:inline-block;float:left;font-size:20px;position:relative;direction:rtl;top:50%;left:50%;transform:translate(-50%,-50%)'></div>");
+                container.append(elem);
+                elem.text(item.text);
+              }
               if (item.isButton && item.run) {
                 container.css("cursor", "pointer");
                 container.click(function (e) {
-                  var run = item.run();
+                  var run = item.run(that.container);
                   if (run === undefined || !!run) that._playOn();
                 });
                 container.mouseenter(function (e) {
@@ -164,6 +194,68 @@ var OverlayButtons = (function (_Clappr$UIContainerPlugin) {
                 });
               }
             });
+          });
+        });
+
+        var containerFixed = this.$el.find(".clappr-overlay-fixed");
+        this._options.schedules.cellular.forEach(function (cellsOpt) {
+          var elmContainer = $("<div></div>");
+          containerFixed.append(elmContainer);
+          layouts[cellsOpt.index] = elmContainer;
+          elmContainer.hide();
+
+          cellsOpt.cells.forEach(function (item) {
+            var cellElm = $("<div style='position:fixed;width:100%;height:100%;left:0;top:0;display:block;float:none;clear:both;z-index:1000'></div>");
+            elmContainer.append(cellElm);
+            var _iteratorNormalCompletion = true;
+            var _didIteratorError = false;
+            var _iteratorError = undefined;
+
+            try {
+              for (var _iterator = ["width", "height", "left", "top"][Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+                var attr = _step.value;
+
+                if (item[attr]) cellElm.css(attr, item[attr] * 100 + "%");
+              }
+            } catch (err) {
+              _didIteratorError = true;
+              _iteratorError = err;
+            } finally {
+              try {
+                if (!_iteratorNormalCompletion && _iterator["return"]) {
+                  _iterator["return"]();
+                }
+              } finally {
+                if (_didIteratorError) {
+                  throw _iteratorError;
+                }
+              }
+            }
+
+            var cellElmInner = $(defaultElementHtml);
+            cellElm.append(cellElmInner);
+            if (item.html) cellElmInner.append($(item.html));else {
+              var elem = $("<div style='display:inline-block;float:left;font-size:20px;position:relative;direction:rtl;top:50%;left:50%;transform:translate(-50%,-50%)'></div>");
+              cellElmInner.append(elem);
+              elem.text(item.text);
+            }
+            applyStyles(cellElm, item.style);
+            if (item.isButton && item.run) {
+              cellElm.css("cursor", "pointer");
+              cellElm.click(function (e) {
+                var run = item.run(that.container);
+                if (run === undefined || !!run) that._playOn();
+              });
+              cellElm.mouseenter(function (e) {
+                cellElm.css("border", "white").css("background", "lightgray");
+                applyStyles(container, item.styleHover);
+              });
+              cellElm.mouseleave(function (e) {
+                cellElm.css("border", "").css("background", "");
+                removeStyles(container, item.styleHover);
+                applyStyles(container, item.style);
+              });
+            }
           });
         });
 
@@ -201,11 +293,11 @@ module.exports = window.OverlayButtons = OverlayButtons;
 var template = require("lodash.template");
 module.exports = {
 
-  overlay_buttons: template("<div class=\"clappr-overlay\">  <div class=\"clappr-overlay-container\">  </div></div>"),
+  overlay_buttons: template("<div class=\"clappr-overlay\">  <div class=\"clappr-overlay-container\">  </div></div><div class=\"clappr-overlay-fixed\"></div>"),
 
   CSS: {
 
-    overlay_buttons: "div.clappr-overlay{font-size:100px;color:#fff;background-color:rgba(134,134,134,.68);position:fixed;z-index:1;width:100%;height:100%;box-shadow:inset 0 0 10px 16px #000;text-shadow:0 0 6px #000;cursor:initial}div.clappr-overlay-container{top:10px;bottom:10px;left:10px;right:10px;width:auto;height:auto;position:fixed;background:rgba(63,63,63,.51)}" }
+    overlay_buttons: "div.clappr-overlay{color:#fff;background-color:rgba(134,134,134,.68);position:fixed;z-index:1;width:100%;height:100%;box-shadow:inset 0 0 10px 16px #000;text-shadow:0 0 6px #000;cursor:initial}div.clappr-overlay-container{top:10px;bottom:10px;left:10px;right:10px;width:auto;height:auto;position:fixed;background:rgba(63,63,63,.51)}" }
 };
 
 },{"lodash.template":36}],3:[function(require,module,exports){

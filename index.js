@@ -20,22 +20,39 @@ class OverlayButtons extends Clappr.UIContainerPlugin {
 
   timeUpdated(timeProgress) {
     let currentSecond = Math.floor(timeProgress.current);
-    this._options.schedules = this._options.schedules.filter(s => s.limit != 0);
-    this._options.schedules.filter(s => s.start < currentSecond || s.start > currentSecond + 1).forEach(s => s.lock = false);
-    this._options.schedules.filter(s => s.start >= currentSecond && s.start < currentSecond + 1).filter(s => !s.lock).forEach(s => {
+    this._options.schedules.tabular.filter(s => s.start > currentSecond || s.start + 1 <= currentSecond).forEach(s => {
+      s.showing = false;
+      s.justShown = false;
+      this._layouts[s.index].hide();
+    });
+    this._options.schedules.tabular.filter(s => s.start <= currentSecond && s.start + 1 > currentSecond).filter(s => !s.justShown).forEach(s => {
       if (s.limit > 0) s.limit -= 1;
-      s.lock = true;
-      this.$el.show();
+      s.showing = true;
+      s.justShown = true;
       this.container.disableMediaControl();
-      this._layouts.forEach(l => l.hide());
       this._layouts[s.index].show();
       this.container.playback.pause();
       const that = this;
       if (s.wait > 0) this._scheduled = window.setTimeout(() => that._playOn(), s.wait * 1000);
     });
+
+    this._options.schedules.cellular.filter(s => s.start <= timeProgress.current && s.end >= timeProgress.current).forEach(s => {
+      if (s.limit > 0) s.limit -= 1;
+      this._layouts[s.index].show();
+    });
+    this._options.schedules.cellular.filter(s => s.start > timeProgress.current || s.end < timeProgress.current).forEach(s => {
+      this._layouts[s.index].hide();
+    });
+    let showTabular = this._options.schedules.tabular.filter(s => s.showing).length > 0;
+    let showCellular = this._options.schedules.cellular.filter(s => s.start <= timeProgress.current && s.end >= timeProgress.current).length > 0;
+    if (showTabular || showCellular) this.$el.show(); else this.$el.hide();
+    if (showTabular) this.$el.find(".clappr-overlay").show(); else this.$el.find(".clappr-overlay").hide();
+    if (showCellular) this.$el.find(".clappr-overlay-fixed").show(); else this.$el.find(".clappr-overlay-fixed").hide();
   }
 
   _playOn() {
+    this._options.schedules.tabular.filter(s => s.showing).forEach(s => s.showing = false);
+    this._options.schedules.tabular = this._options.schedules.tabular.filter(s => s.limit != 0);
     if (this._scheduled)
       window.clearTimeout(this._scheduled);
     this._scheduled = undefined;
@@ -90,9 +107,9 @@ class OverlayButtons extends Clappr.UIContainerPlugin {
 
     const that = this;
 
-    let schedules = {};
+    let layoutOptions = {};
     this._options.schedule.forEach(schedule => {
-      schedule.lock = false;
+      schedule.showing = false;
       if (!schedule.limit)
         schedule.limit = 0;
       else if (schedule.limit < 0)
@@ -101,37 +118,45 @@ class OverlayButtons extends Clappr.UIContainerPlugin {
         schedule.limit = Math.floor(schedule.limit);
       schedule.start = Math.floor(schedule.start);
       schedule.wait = schedule.wait || -1;
-      if (!schedules[schedule.start])
-        schedules[schedule.start] = schedule;
+      schedule.end = schedule.end || +(schedule.start) + 1;
+      if (!layoutOptions[schedule.start])
+        layoutOptions[schedule.start] = schedule;
       else
         console.error("duplicate start-time:" + schedule.start)
     });
-    this._options.schedules = [];
+
+    this._options.schedules = {cellular: [], tabular: []};
     let index = 0;
-    for (let k in schedules) {
-      schedules[k].index = index++;
-      this._options.schedules.push(schedules[k]);
+    for (let k in layoutOptions) {
+      layoutOptions[k].index = index++;
+      this._options.schedules[layoutOptions[k].layout == 'cellular' ? 'cellular' : 'tabular'].push(layoutOptions[k]);
     }
+    for (let k in layoutOptions)
+      layoutOptions[k].index = index++;
 
     let layouts = this._layouts = [];
 
     let containerP = this.$el.find(".clappr-overlay-container");
     let container = $(defaultElementHtml);
     containerP.append(container);
-    this._options.schedules.forEach(schedule => {
+    this._options.schedules.tabular.forEach(schedule => {
       let elmContainer = $(defaultElementHtml);
       container.append(elmContainer);
       layouts[schedule.index] = elmContainer;
       applyStyles(container, schedule.style);
       mkDivisions(elmContainer, 'height', schedule.rows, (row, rowInner) => {
         mkDivisions(rowInner, 'width', row.cols, (item, container) => {
-          let elem = $("<div style='display:inline-block;float:left;font-size:20px;position:relative;direction:rtl;top:50%;left:50%;transform:translate(-50%,-50%)'></div>");
-          container.append(elem);
-          elem.text(item.text);
+          if (item.html)
+            container.append($(item.html));
+          else {
+            let elem = $("<div style='display:inline-block;float:left;font-size:20px;position:relative;direction:rtl;top:50%;left:50%;transform:translate(-50%,-50%)'></div>");
+            container.append(elem);
+            elem.text(item.text);
+          }
           if (item.isButton && item.run) {
             container.css('cursor', 'pointer');
             container.click(e => {
-              let run = item.run();
+              let run = item.run(that.container);
               if (run === undefined || !!run) that._playOn();
             });
             container.mouseenter(e => {
@@ -145,6 +170,48 @@ class OverlayButtons extends Clappr.UIContainerPlugin {
             });
           }
         });
+      });
+    });
+
+    let containerFixed = this.$el.find(".clappr-overlay-fixed");
+    this._options.schedules.cellular.forEach(cellsOpt => {
+      let elmContainer = $("<div></div>");
+      containerFixed.append(elmContainer);
+      layouts[cellsOpt.index] = elmContainer;
+      elmContainer.hide();
+
+      cellsOpt.cells.forEach(item => {
+        let cellElm = $("<div style='position:fixed;width:100%;height:100%;left:0;top:0;display:block;float:none;clear:both;z-index:1000'></div>");
+        elmContainer.append(cellElm);
+        for (let attr of ['width', 'height', 'left', 'top'])
+          if (item[attr])
+            cellElm.css(attr, (item[attr] * 100) + '%');
+        let cellElmInner = $(defaultElementHtml);
+        cellElm.append(cellElmInner);
+        if (item.html)
+          cellElmInner.append($(item.html));
+        else {
+          let elem = $("<div style='display:inline-block;float:left;font-size:20px;position:relative;direction:rtl;top:50%;left:50%;transform:translate(-50%,-50%)'></div>");
+          cellElmInner.append(elem);
+          elem.text(item.text);
+        }
+        applyStyles(cellElm, item.style);
+        if (item.isButton && item.run) {
+          cellElm.css('cursor', 'pointer');
+          cellElm.click(e => {
+            let run = item.run(that.container);
+            if (run === undefined || !!run) that._playOn();
+          });
+          cellElm.mouseenter(e => {
+            cellElm.css('border', 'white').css('background', 'lightgray');
+            applyStyles(container, item.styleHover);
+          });
+          cellElm.mouseleave(e => {
+            cellElm.css('border', '').css('background', '');
+            removeStyles(container, item.styleHover);
+            applyStyles(container, item.style);
+          });
+        }
       });
     });
 

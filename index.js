@@ -5,7 +5,7 @@ var css = require('css');
 class OverlayButtons extends Clappr.UIContainerPlugin {
   constructor(core) {
     super(core);
-    this._options = $.extend({}, this.options.OverlayButtons);
+    this._options = Zepto.extend({}, this.options.OverlayButtons);
     this.render();
   }
 
@@ -92,11 +92,11 @@ class OverlayButtons extends Clappr.UIContainerPlugin {
         sum = 1.0
       }
       list.forEach(item => {
-        container.append($(defaultElementHtml)
+        container.append(Zepto(defaultElementHtml)
           .css(dim, pad * 100. / sum + '%'));
-        let itemEl = $(defaultElementHtml)
+        let itemEl = Zepto(defaultElementHtml)
           .css(dim, item[dim] * 100. / sum + '%');
-        let itemElemInner = $(defaultElementHtml)
+        let itemElemInner = Zepto(defaultElementHtml)
           .css(dim, '100%');
         itemEl.append(itemElemInner);
         applyStyles(itemEl, item.style);
@@ -137,19 +137,19 @@ class OverlayButtons extends Clappr.UIContainerPlugin {
     let layouts = this._layouts = [];
 
     let containerP = this.$el.find(".clappr-overlay-container");
-    let container = $(defaultElementHtml);
+    let container = Zepto(defaultElementHtml);
     containerP.append(container);
     this._options.schedules.tabular.forEach(schedule => {
-      let elmContainer = $(defaultElementHtml);
+      let elmContainer = Zepto(defaultElementHtml);
       container.append(elmContainer);
       layouts[schedule.index] = elmContainer;
       applyStyles(container, schedule.style);
       mkDivisions(elmContainer, 'height', schedule.rows, (row, rowInner) => {
         mkDivisions(rowInner, 'width', row.cols, (item, container) => {
           if (item.html)
-            container.append($(item.html));
+            container.append(Zepto(item.html));
           else {
-            let elem = $("<div style='display:inline-block;float:left;font-size:20px;position:relative;direction:rtl;top:50%;left:50%;transform:translate(-50%,-50%)'></div>");
+            let elem = Zepto("<div style='display:inline-block;float:left;font-size:20px;position:relative;direction:rtl;top:50%;left:50%;transform:translate(-50%,-50%)'></div>");
             container.append(elem);
             elem.text(item.text);
           }
@@ -175,23 +175,23 @@ class OverlayButtons extends Clappr.UIContainerPlugin {
 
     let containerFixed = this.$el.find(".clappr-overlay-fixed");
     this._options.schedules.cellular.forEach(cellsOpt => {
-      let elmContainer = $("<div></div>");
+      let elmContainer = Zepto("<div></div>");
       containerFixed.append(elmContainer);
       layouts[cellsOpt.index] = elmContainer;
       elmContainer.hide();
 
       cellsOpt.cells.forEach(item => {
-        let cellElm = $("<div style='position:fixed;width:100%;height:100%;left:0;top:0;display:block;float:none;clear:both;z-index:1000'></div>");
+        let cellElm = Zepto("<div style='position:fixed;width:100%;height:100%;left:0;top:0;display:block;float:none;clear:both;z-index:1000'></div>");
         elmContainer.append(cellElm);
         for (let attr of ['width', 'height', 'left', 'top'])
           if (item[attr])
             cellElm.css(attr, (item[attr] * 100) + '%');
-        let cellElmInner = $(defaultElementHtml);
+        let cellElmInner = Zepto(defaultElementHtml);
         cellElm.append(cellElmInner);
         if (item.html)
-          cellElmInner.append($(item.html));
+          cellElmInner.append(Zepto(item.html));
         else {
-          let elem = $("<div style='display:inline-block;float:left;font-size:20px;position:relative;direction:rtl;top:50%;left:50%;transform:translate(-50%,-50%)'></div>");
+          let elem = Zepto("<div style='display:inline-block;float:left;font-size:20px;position:relative;direction:rtl;top:50%;left:50%;transform:translate(-50%,-50%)'></div>");
           cellElmInner.append(elem);
           elem.text(item.text);
         }

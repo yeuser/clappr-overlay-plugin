@@ -18,7 +18,7 @@ var OverlayButtons = (function (_Clappr$UIContainerPlugin) {
     _classCallCheck(this, OverlayButtons);
 
     _get(Object.getPrototypeOf(OverlayButtons.prototype), "constructor", this).call(this, core);
-    this._options = $.extend({}, this.options.OverlayButtons);
+    this._options = Zepto.extend({}, this.options.OverlayButtons);
     this.render();
   }
 
@@ -130,9 +130,9 @@ var OverlayButtons = (function (_Clappr$UIContainerPlugin) {
             sum = 1;
           }
           list.forEach(function (item) {
-            container.append($(defaultElementHtml).css(dim, pad * 100 / sum + "%"));
-            var itemEl = $(defaultElementHtml).css(dim, item[dim] * 100 / sum + "%");
-            var itemElemInner = $(defaultElementHtml).css(dim, "100%");
+            container.append(Zepto(defaultElementHtml).css(dim, pad * 100 / sum + "%"));
+            var itemEl = Zepto(defaultElementHtml).css(dim, item[dim] * 100 / sum + "%");
+            var itemElemInner = Zepto(defaultElementHtml).css(dim, "100%");
             itemEl.append(itemElemInner);
             applyStyles(itemEl, item.style);
             container.append(itemEl);
@@ -163,17 +163,17 @@ var OverlayButtons = (function (_Clappr$UIContainerPlugin) {
         }var layouts = this._layouts = [];
 
         var containerP = this.$el.find(".clappr-overlay-container");
-        var container = $(defaultElementHtml);
+        var container = Zepto(defaultElementHtml);
         containerP.append(container);
         this._options.schedules.tabular.forEach(function (schedule) {
-          var elmContainer = $(defaultElementHtml);
+          var elmContainer = Zepto(defaultElementHtml);
           container.append(elmContainer);
           layouts[schedule.index] = elmContainer;
           applyStyles(container, schedule.style);
           mkDivisions(elmContainer, "height", schedule.rows, function (row, rowInner) {
             mkDivisions(rowInner, "width", row.cols, function (item, container) {
-              if (item.html) container.append($(item.html));else {
-                var elem = $("<div style='display:inline-block;float:left;font-size:20px;position:relative;direction:rtl;top:50%;left:50%;transform:translate(-50%,-50%)'></div>");
+              if (item.html) container.append(Zepto(item.html));else {
+                var elem = Zepto("<div style='display:inline-block;float:left;font-size:20px;position:relative;direction:rtl;top:50%;left:50%;transform:translate(-50%,-50%)'></div>");
                 container.append(elem);
                 elem.text(item.text);
               }
@@ -199,13 +199,13 @@ var OverlayButtons = (function (_Clappr$UIContainerPlugin) {
 
         var containerFixed = this.$el.find(".clappr-overlay-fixed");
         this._options.schedules.cellular.forEach(function (cellsOpt) {
-          var elmContainer = $("<div></div>");
+          var elmContainer = Zepto("<div></div>");
           containerFixed.append(elmContainer);
           layouts[cellsOpt.index] = elmContainer;
           elmContainer.hide();
 
           cellsOpt.cells.forEach(function (item) {
-            var cellElm = $("<div style='position:fixed;width:100%;height:100%;left:0;top:0;display:block;float:none;clear:both;z-index:1000'></div>");
+            var cellElm = Zepto("<div style='position:fixed;width:100%;height:100%;left:0;top:0;display:block;float:none;clear:both;z-index:1000'></div>");
             elmContainer.append(cellElm);
             var _iteratorNormalCompletion = true;
             var _didIteratorError = false;
@@ -232,10 +232,10 @@ var OverlayButtons = (function (_Clappr$UIContainerPlugin) {
               }
             }
 
-            var cellElmInner = $(defaultElementHtml);
+            var cellElmInner = Zepto(defaultElementHtml);
             cellElm.append(cellElmInner);
-            if (item.html) cellElmInner.append($(item.html));else {
-              var elem = $("<div style='display:inline-block;float:left;font-size:20px;position:relative;direction:rtl;top:50%;left:50%;transform:translate(-50%,-50%)'></div>");
+            if (item.html) cellElmInner.append(Zepto(item.html));else {
+              var elem = Zepto("<div style='display:inline-block;float:left;font-size:20px;position:relative;direction:rtl;top:50%;left:50%;transform:translate(-50%,-50%)'></div>");
               cellElmInner.append(elem);
               elem.text(item.text);
             }

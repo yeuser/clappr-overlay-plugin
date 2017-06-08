@@ -1,5 +1,4 @@
 div.clappr-overlay {
-  font-size: 100px;
   color: #ffffff;
   background-color: rgba(134, 134, 134, 0.68);
   position: fixed;
@@ -20,4 +19,7 @@ div.clappr-overlay-container {
   height: auto;
   position: fixed;
   background: rgba(63, 63, 63, 0.51);
+}
+
+div.clappr-overlay-fixed {
 }

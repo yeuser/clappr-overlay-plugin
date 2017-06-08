@@ -145,7 +145,7 @@ var OverlayButtons = (function (_Clappr$UIContainerPlugin) {
         var layoutOptions = {};
         this._options.schedule.forEach(function (schedule) {
           schedule.showing = false;
-          if (!schedule.limit) schedule.limit = 0;else if (schedule.limit < 0) schedule.limit = -1;else if (schedule.limit >= 1) schedule.limit = Math.floor(schedule.limit);
+          if (!schedule.limit || schedule.limit < 0) schedule.limit = -1;else if (schedule.limit >= 1) schedule.limit = Math.floor(schedule.limit);
           schedule.start = Math.floor(schedule.start);
           schedule.wait = schedule.wait || -1;
           schedule.end = schedule.end || +schedule.start + 1;

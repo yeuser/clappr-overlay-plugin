@@ -110,9 +110,7 @@ class OverlayButtons extends Clappr.UIContainerPlugin {
     let layoutOptions = {};
     this._options.schedule.forEach(schedule => {
       schedule.showing = false;
-      if (!schedule.limit)
-        schedule.limit = 0;
-      else if (schedule.limit < 0)
+      if (!schedule.limit || schedule.limit < 0)
         schedule.limit = -1;
       else if (schedule.limit >= 1)
         schedule.limit = Math.floor(schedule.limit);

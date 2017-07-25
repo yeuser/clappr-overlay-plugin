@@ -11,6 +11,7 @@
 
   <script type="text/javascript" src="/dist/clappr.js"></script>
   <script type="text/javascript" charset="utf-8" src="/dist/overlay_buttons.js"></script>
+
   <title>Overlay Buttons Test Page</title>
 </head>
 <body>
@@ -26,7 +27,6 @@
 <script type="text/javascript" charset="utf-8">
   window.onload = function () {
     var player = new Clappr.Player({
-//      source: 'http://192.168.1.232/vid/kGaNeXIrdFHOvBpqqJUzkZWeJzADMFoDhCohuloX/smil:video.smil/playlist.m3u8',
       source: 'https://bitdash-a.akamaihd.net/content/MI201109210084_1/m3u8s/f08e80da-bf1d-4e3d-8899-f0f6155f6efa.m3u8',
       parentId: '#player-wrapper',
       plugins: {
@@ -35,7 +35,8 @@
       OverlayButtons: {
         schedule: [
           {
-            start: 60,
+            start: 6,
+            wait: 30,
             rows: [
               {
                 height: .41,
@@ -43,11 +44,13 @@
                   width: .9,
                   text: "آیا این خوب بود؟",
                   style: {
-                    background: '#a15',
+                    background: 'rgba(0,0,0,0.5)',
+                    font: 'iranyekan !important',
+                    border_radius: '3px'
                   }
                 }],
                 style: {
-                  background: '#1b1',
+                  //background: '#1b1',
                 }
               },
               {
@@ -62,10 +65,17 @@
                       return true;
                     },
                     style: {
-                      background: '#001',
+                      background: 'rgba(0,0,0,0.1)',
+                      transition: 'all ease-in-out 0.2s',
+                      borderRadius: '5px',
+                      border: '1px solid rgba(255,255,255,0.5)'
                     },
                     styleHover: {
-                      background: '#fff',
+                      background: 'rgba(255,255,255,0.8)',
+                      transition: 'all ease-in-out 0.4s',
+                      borderRadius: '5px',
+                      color: 'black',
+                      textShadow: 'none',
                     }
                   },
                   {
@@ -74,28 +84,49 @@
                     isButton: true,
                     run: (player) => {
                       console.log('no', arguments);
-                      setTimeout(function() {player.seek(30);}, 50);
+                      setTimeout(function () {
+                        player.seek(30);
+                      }, 50);
                       return true;
+                    },
+                    style: {
+                      background: 'rgba(0,0,0,0.1)',
+                      transition: 'all ease-in-out 0.2s',
+                      borderRadius: '5px',
+                      border: '1px solid rgba(255,255,255,0.5)'
+                    },
+                    styleHover: {
+                      background: 'rgba(255,255,255,0.8)',
+                      transition: 'all ease-in-out 0.4s',
+                      borderRadius: '5px',
+                      color: 'black',
+                      textShadow: 'none',
                     }
                   }
                 ]
               }
             ],
             style: {
-              background: '#115',
+//              background: '#115',
             }
           },
           {
-            start: 120,
-            wait: 10,
-            limit: 1,
+            start: 16,
             rows: [
               {
                 height: .41,
                 cols: [{
                   width: .9,
-                  text: "آیا این خوب بود؟"
-                }]
+                  text: "آیا این خوب بود؟",
+                  style: {
+                    background: 'rgba(0,0,0,0.5)',
+                    font: 'iranyekan !important',
+                    border_radius: '3px'
+                  }
+                }],
+                style: {
+                  //background: '#1b1',
+                }
               },
               {
                 height: .41,
@@ -107,25 +138,57 @@
                     run: () => {
                       console.log('yes', arguments);
                       return true;
+                    },
+                    style: {
+                      background: 'rgba(0,0,0,0.1)',
+                      transition: 'all ease-in-out 0.2s',
+                      borderRadius: '5px',
+                      border: '1px solid rgba(255,255,255,0.5)'
+                    },
+                    styleHover: {
+                      background: 'rgba(255,255,255,0.8)',
+                      transition: 'all ease-in-out 0.4s',
+                      borderRadius: '5px',
+                      color: 'black',
+                      textShadow: 'none',
                     }
                   },
                   {
                     width: .3,
                     text: "خیر خوب نیست!",
                     isButton: true,
-                    run: () => {
+                    run: (player) => {
                       console.log('no', arguments);
+                      setTimeout(function () {
+                        player.seek(30);
+                      }, 50);
                       return true;
+                    },
+                    style: {
+                      background: 'rgba(0,0,0,0.1)',
+                      transition: 'all ease-in-out 0.2s',
+                      borderRadius: '5px',
+                      border: '1px solid rgba(255,255,255,0.5)'
+                    },
+                    styleHover: {
+                      background: 'rgba(255,255,255,0.8)',
+                      transition: 'all ease-in-out 0.4s',
+                      borderRadius: '5px',
+                      color: 'black',
+                      textShadow: 'none',
                     }
                   }
                 ]
               }
-            ]
+            ],
+            style: {
+//              background: '#115',
+            }
           },
           {
             layout: 'cellular',
             start: 1,
-            end: 10,
+            end: 5,
             cells: [
               {
                 left: .05,
@@ -134,7 +197,8 @@
                 width: .9,
                 text: "محل تبلیغات",
                 style: {
-                  background: 'blue'
+                  background: 'rgba(255,255,255,0.7)',
+                  border_radius: '5px'
                 }
               }
             ]
@@ -146,4 +210,3 @@
 </script>
 </body>
 </html>
-

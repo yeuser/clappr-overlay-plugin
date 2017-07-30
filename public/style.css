@@ -1,3 +1,7 @@
+div, span {
+  box-sizing: border-box;
+}
+
 div.clappr-overlay {
   color: #ffffff;
   background-color: rgba(134, 134, 134, 0.68);
@@ -23,3 +27,81 @@ div.clappr-overlay-container {
 
 div.clappr-overlay-fixed {
 }
+
+div.clappr-overlay-timer {
+  font-size: 33px;
+  position: fixed;
+  bottom: 10px;
+  right: 10px;
+  width: 2.5em; /* w */
+  height: 2.5em; /* h */
+}
+
+div.clappr-overlay-timer .label {
+  /*position: fixed;*/
+  width: 2.5em; /* w */;
+  height: 2.5em; /* h */;
+  line-height: 2.45em;
+  font-weight: bold;
+  text-shadow: #2f2c2b -2px 1px 6px;
+  background: #195819;
+  border-radius: 50%;
+  display: inline-block;
+  text-align: center;
+  -webkit-font-smoothing: antialiased;
+}
+
+div.clappr-overlay-timer .label span {
+  line-height: 2.35em;
+  font-size: 0.85em;;
+}
+
+div.clappr-overlay-timer .pie {
+  position: absolute;
+  height: 2.4em; /* w */;
+  width: 2.4em; /* h */;
+  top: 0.05em;
+  left: 0.05em;
+}
+
+div.clappr-overlay-timer .pie .quarter-circle {
+  position: absolute;
+  height: 2.4em; /* w */;
+  width: 2.4em; /* h */;
+  border: 0.226em solid #e74c3c;
+  border-radius: 50%;
+  clip: rect(-0.15em 2.55em /* w */ 1.16em /* h/2 */ 1.16em /* w/2 */);
+  left: 0;
+  top: 0;
+}
+
+div.clappr-overlay-timer .pie .top-left-side {
+  -webkit-transform: rotate(270deg);
+  transform: rotate(270deg);
+}
+
+div.clappr-overlay-timer .pie .bottom-left-side {
+  -webkit-transform: rotate(180deg);
+  transform: rotate(180deg);
+}
+
+div.clappr-overlay-timer .pie .bottom-right-side {
+  -webkit-transform: rotate(90deg);
+  transform: rotate(90deg);
+}
+
+div.clappr-overlay-timer .pie .top-right-side {
+  -webkit-transform: rotate(0deg);
+  transform: rotate(0deg);
+}
+
+div.clappr-overlay-timer .shadow {
+  width: 2.5em; /* w */;
+  height: 2.5em; /* h */;
+  border: 0.34em solid #bdc3c7;
+  border-radius: 50%;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+

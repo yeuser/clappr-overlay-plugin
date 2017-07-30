@@ -9,7 +9,6 @@ var _inherits = function (subClass, superClass) { if (typeof superClass !== "fun
 
 var _classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } };
 
-// var UiContainerPlugin = require('UIContainerPlugin');
 var JST = require("./jst");
 var css = require("css");
 
@@ -27,7 +26,6 @@ var OverlayButtons = (function (_Clappr$UIContainerPlugin) {
   _createClass(OverlayButtons, {
     bindEvents: {
       value: function bindEvents() {
-        // this.listenTo(this.container, Clappr.Events.CONTAINER_PAUSE, this.show);
         this.listenTo(this.container, Clappr.Events.CONTAINER_TIMEUPDATE, this.timeUpdated);
       }
     },
@@ -48,16 +46,93 @@ var OverlayButtons = (function (_Clappr$UIContainerPlugin) {
         }).filter(function (s) {
           return !s.justShown;
         }).forEach(function (s) {
+          _this.$el.find(".clappr-overlay-timer").hide();
           if (s.limit > 0) s.limit -= 1;
           s.showing = true;
           s.justShown = true;
-          _this.container.disableMediaControl();
           _this._layouts[s.index].show();
           _this.container.playback.pause();
+          _this.container.disableMediaControl();
           var that = _this;
-          if (s.wait > 0) _this._scheduled = window.setTimeout(function () {
-            return that._playOn();
-          }, s.wait * 1000);
+          window.setTimeout(function () {
+            return that.container.disableMediaControl();
+          }, 100);
+          if (s.wait > 0) {
+            (function () {
+              var wait_time = s.wait * 1000;
+              var end_time = new Date().getTime() + wait_time;
+              _this.$el.find(".clappr-overlay-timer .pie .quarter-circle").show();
+              _this.$el.find(".clappr-overlay-timer .pie").css("clip", "");
+              var $el = _this.$el;
+              css.parse(JST.CSS.overlay_buttons, { compress: true }).stylesheet.rules.forEach(function (rule) {
+                return rule.selectors.filter(function (s) {
+                  return s.startsWith("div.clappr-overlay-timer .pie .") && s.endsWith("-side");
+                }).forEach(function (selector) {
+                  var elem = $el.find(selector);
+                  rule.declarations.forEach(function (declaration) {
+                    return elem.css(declaration.property, declaration.value);
+                  });
+                });
+              });
+              var hidden_quarters = {};
+              var intervalFun = function () {
+                var remaining_waiting_time = end_time - new Date().getTime();
+                if (remaining_waiting_time <= 0) {
+                  that._playOn();
+                  return;
+                }
+                _this.$el.find(".clappr-overlay-timer .label span").text(Math.ceil(remaining_waiting_time / 1000));
+                var ratio = remaining_waiting_time / wait_time;
+                if (ratio > 0.75) {
+                  var deg = (ratio - 0.75) * 360 + 180;
+                  _this.$el.find(".clappr-overlay-timer .pie .top-left-side").css("-webkit-transform", "rotate(" + deg + "deg)");
+                  _this.$el.find(".clappr-overlay-timer .pie .top-left-side").css("transform", "rotate(" + deg + "deg)");
+                } else if (ratio > 0.5) {
+                  if (!hidden_quarters["top-left"]) {
+                    _this.$el.find(".clappr-overlay-timer .pie .top-left-side").hide();
+                    hidden_quarters["top-left"] = true;
+                  }
+                  var deg = (ratio - 0.5) * 360 + 90;
+                  _this.$el.find(".clappr-overlay-timer .pie .bottom-left-side").css("-webkit-transform", "rotate(" + deg + "deg)");
+                  _this.$el.find(".clappr-overlay-timer .pie .bottom-left-side").css("transform", "rotate(" + deg + "deg)");
+                } else if (ratio > 0.25) {
+                  if (!hidden_quarters["top-left"]) {
+                    _this.$el.find(".clappr-overlay-timer .pie .top-left-side").hide();
+                    hidden_quarters["top-left"] = true;
+                  }
+                  if (!hidden_quarters["bottom-left"]) {
+                    _this.$el.find(".clappr-overlay-timer .pie .bottom-left-side").hide();
+                    hidden_quarters["bottom-left"] = true;
+                  }
+                  var deg = (ratio - 0.25) * 360;
+                  _this.$el.find(".clappr-overlay-timer .pie .bottom-right-side").css("-webkit-transform", "rotate(" + deg + "deg)");
+                  _this.$el.find(".clappr-overlay-timer .pie .bottom-right-side").css("transform", "rotate(" + deg + "deg)");
+                } else {
+                  if (!hidden_quarters["top-left"]) {
+                    _this.$el.find(".clappr-overlay-timer .pie .top-left-side").hide();
+                    hidden_quarters["top-left"] = true;
+                  }
+                  if (!hidden_quarters["bottom-left"]) {
+                    _this.$el.find(".clappr-overlay-timer .pie .bottom-left-side").hide();
+                    hidden_quarters["bottom-left"] = true;
+                  }
+                  if (!hidden_quarters["bottom-right"]) {
+                    _this.$el.find(".clappr-overlay-timer .pie .bottom-right-side").hide();
+                    hidden_quarters["bottom-right"] = true;
+                  }
+                  _this.$el.find(".clappr-overlay-timer .pie").css("clip", "rect(-0.15em 2.55em 2.55em 1.16em);");
+                  var deg = ratio * 360 - 90;
+                  _this.$el.find(".clappr-overlay-timer .pie .top-right-side").css("-webkit-transform", "rotate(" + deg + "deg)");
+                  _this.$el.find(".clappr-overlay-timer .pie .top-right-side").css("transform", "rotate(" + deg + "deg)");
+                }
+                _this._scheduled = window.setTimeout(function () {
+                  return intervalFun();
+                }, 100);
+              };
+              _this.$el.find(".clappr-overlay-timer").show();
+              intervalFun();
+            })();
+          }
         });
 
         this._options.schedules.cellular.filter(function (s) {
@@ -293,11 +368,11 @@ module.exports = window.OverlayButtons = OverlayButtons;
 var template = require("lodash.template");
 module.exports = {
 
-  overlay_buttons: template("<div class=\"clappr-overlay\">  <div class=\"clappr-overlay-container\">  </div></div><div class=\"clappr-overlay-fixed\"></div>"),
+  overlay_buttons: template("<div class=\"clappr-overlay\">  <div class=\"clappr-overlay-container\">    <div class=\"clappr-overlay-timer\">      <div class=\"label\"><span>45</span><small style=\"font-size:0.5em\">s</small></div>      <div class=\"shadow\"></div>      <div class=\"pie\">        <div class=\"quarter-circle top-right-side\"></div>        <div class=\"quarter-circle bottom-right-side\"></div>        <div class=\"quarter-circle top-left-side\"></div>        <div class=\"quarter-circle bottom-left-side\"></div>      </div>    </div>  </div></div><div class=\"clappr-overlay-fixed\"></div>"),
 
   CSS: {
 
-    overlay_buttons: "div.clappr-overlay{color:#fff;background-color:rgba(134,134,134,.68);position:fixed;z-index:1;width:100%;height:100%;box-shadow:inset 0 0 10px 16px #000;text-shadow:0 0 6px #000;cursor:initial}div.clappr-overlay-container{top:10px;bottom:10px;left:10px;right:10px;width:auto;height:auto;position:fixed;background:rgba(63,63,63,.51)}" }
+    overlay_buttons: "div,span{box-sizing:border-box}div.clappr-overlay{color:#fff;background-color:rgba(134,134,134,.68);position:fixed;z-index:1;width:100%;height:100%;box-shadow:inset 0 0 10px 16px #000;text-shadow:0 0 6px #000;cursor:initial}div.clappr-overlay-container{top:10px;bottom:10px;left:10px;right:10px;width:auto;height:auto;position:fixed;background:rgba(63,63,63,.51)}div.clappr-overlay-timer{font-size:33px;position:fixed;bottom:10px;right:10px;width:2.5em;height:2.5em}div.clappr-overlay-timer .label{width:2.5em;height:2.5em;line-height:2.45em;font-weight:700;text-shadow:#2f2c2b -2px 1px 6px;background:#195819;border-radius:50%;display:inline-block;text-align:center;-webkit-font-smoothing:antialiased}div.clappr-overlay-timer .label span{line-height:2.35em;font-size:.85em}div.clappr-overlay-timer .pie{position:absolute;height:2.4em;width:2.4em;top:.05em;left:.05em}div.clappr-overlay-timer .pie .quarter-circle{position:absolute;height:2.4em;width:2.4em;border:.226em solid #e74c3c;border-radius:50%;clip:rect(-.15em 2.55em 1.16em 1.16em);left:0;top:0}div.clappr-overlay-timer .pie .top-left-side{-webkit-transform:rotate(270deg);transform:rotate(270deg)}div.clappr-overlay-timer .pie .bottom-left-side{-webkit-transform:rotate(180deg);transform:rotate(180deg)}div.clappr-overlay-timer .pie .bottom-right-side{-webkit-transform:rotate(90deg);transform:rotate(90deg)}div.clappr-overlay-timer .pie .top-right-side{-webkit-transform:rotate(0deg);transform:rotate(0deg)}div.clappr-overlay-timer .shadow{width:2.5em;height:2.5em;border:.34em solid #bdc3c7;border-radius:50%;position:absolute;top:0;left:0}" }
 };
 
 },{"lodash.template":36}],3:[function(require,module,exports){

@@ -1,6 +1,5 @@
-// var UiContainerPlugin = require('UIContainerPlugin');
-var JST = require('./jst');
-var css = require('css');
+const JST = require('./jst');
+const css = require('css');
 
 class OverlayButtons extends Clappr.UIContainerPlugin {
   constructor(core) {
@@ -14,7 +13,6 @@ class OverlayButtons extends Clappr.UIContainerPlugin {
   }
 
   bindEvents() {
-    // this.listenTo(this.container, Clappr.Events.CONTAINER_PAUSE, this.show);
     this.listenTo(this.container, Clappr.Events.CONTAINER_TIMEUPDATE, this.timeUpdated);
   }
 
@@ -26,14 +24,82 @@ class OverlayButtons extends Clappr.UIContainerPlugin {
       this._layouts[s.index].hide();
     });
     this._options.schedules.tabular.filter(s => s.start <= currentSecond && s.start + 1 > currentSecond).filter(s => !s.justShown).forEach(s => {
+      this.$el.find(".clappr-overlay-timer").hide();
       if (s.limit > 0) s.limit -= 1;
       s.showing = true;
       s.justShown = true;
-      this.container.disableMediaControl();
       this._layouts[s.index].show();
       this.container.playback.pause();
+      this.container.disableMediaControl();
       const that = this;
-      if (s.wait > 0) this._scheduled = window.setTimeout(() => that._playOn(), s.wait * 1000);
+      window.setTimeout(() => that.container.disableMediaControl(), 100);
+      if (s.wait > 0) {
+        const wait_time = s.wait * 1000;
+        const end_time = new Date().getTime() + wait_time;
+        this.$el.find(".clappr-overlay-timer .pie .quarter-circle").show();
+        this.$el.find(".clappr-overlay-timer .pie").css('clip', '');
+        let $el = this.$el;
+        css.parse(JST.CSS.overlay_buttons, {compress: true}).stylesheet.rules.forEach(rule =>
+          rule.selectors.filter(s => s.startsWith('div.clappr-overlay-timer .pie .') && s.endsWith('-side')).forEach(selector => {
+            let elem = $el.find(selector);
+            rule.declarations.forEach(declaration => elem.css(declaration.property, declaration.value));
+          }));
+        let hidden_quarters = {};
+        let intervalFun = () => {
+          const remaining_waiting_time = end_time - new Date().getTime();
+          if (remaining_waiting_time <= 0) {
+            that._playOn();
+            return;
+          }
+          this.$el.find(".clappr-overlay-timer .label span").text(Math.ceil(remaining_waiting_time / 1000.0));
+          const ratio = remaining_waiting_time / wait_time;
+          if (ratio > 0.75) {
+            const deg = (ratio - 0.75) * 360 + 180;
+            this.$el.find(".clappr-overlay-timer .pie .top-left-side").css('-webkit-transform', 'rotate(' + deg + 'deg)');
+            this.$el.find(".clappr-overlay-timer .pie .top-left-side").css('transform', 'rotate(' + deg + 'deg)');
+          } else if (ratio > 0.5) {
+            if (!hidden_quarters['top-left']) {
+              this.$el.find(".clappr-overlay-timer .pie .top-left-side").hide();
+              hidden_quarters['top-left'] = true;
+            }
+            const deg = (ratio - 0.5) * 360 + 90;
+            this.$el.find(".clappr-overlay-timer .pie .bottom-left-side").css('-webkit-transform', 'rotate(' + deg + 'deg)');
+            this.$el.find(".clappr-overlay-timer .pie .bottom-left-side").css('transform', 'rotate(' + deg + 'deg)');
+          } else if (ratio > 0.25) {
+            if (!hidden_quarters['top-left']) {
+              this.$el.find(".clappr-overlay-timer .pie .top-left-side").hide();
+              hidden_quarters['top-left'] = true;
+            }
+            if (!hidden_quarters['bottom-left']) {
+              this.$el.find(".clappr-overlay-timer .pie .bottom-left-side").hide();
+              hidden_quarters['bottom-left'] = true;
+            }
+            const deg = (ratio - 0.25) * 360;
+            this.$el.find(".clappr-overlay-timer .pie .bottom-right-side").css('-webkit-transform', 'rotate(' + deg + 'deg)');
+            this.$el.find(".clappr-overlay-timer .pie .bottom-right-side").css('transform', 'rotate(' + deg + 'deg)');
+          } else {
+            if (!hidden_quarters['top-left']) {
+              this.$el.find(".clappr-overlay-timer .pie .top-left-side").hide();
+              hidden_quarters['top-left'] = true;
+            }
+            if (!hidden_quarters['bottom-left']) {
+              this.$el.find(".clappr-overlay-timer .pie .bottom-left-side").hide();
+              hidden_quarters['bottom-left'] = true;
+            }
+            if (!hidden_quarters['bottom-right']) {
+              this.$el.find(".clappr-overlay-timer .pie .bottom-right-side").hide();
+              hidden_quarters['bottom-right'] = true;
+            }
+            this.$el.find(".clappr-overlay-timer .pie").css('clip', 'rect(-0.15em 2.55em 2.55em 1.16em);');
+            const deg = ratio * 360 - 90;
+            this.$el.find(".clappr-overlay-timer .pie .top-right-side").css('-webkit-transform', 'rotate(' + deg + 'deg)');
+            this.$el.find(".clappr-overlay-timer .pie .top-right-side").css('transform', 'rotate(' + deg + 'deg)');
+          }
+          this._scheduled = window.setTimeout(() => intervalFun(), 100);
+        };
+        this.$el.find(".clappr-overlay-timer").show();
+        intervalFun();
+      }
     });
 
     this._options.schedules.cellular.filter(s => s.start <= timeProgress.current && s.end >= timeProgress.current).forEach(s => {
@@ -53,8 +119,7 @@ class OverlayButtons extends Clappr.UIContainerPlugin {
   _playOn() {
     this._options.schedules.tabular.filter(s => s.showing).forEach(s => s.showing = false);
     this._options.schedules.tabular = this._options.schedules.tabular.filter(s => s.limit != 0);
-    if (this._scheduled)
-      window.clearTimeout(this._scheduled);
+    if (this._scheduled) window.clearTimeout(this._scheduled);
     this._scheduled = undefined;
     this.$el.hide();
     this.container.enableMediaControl();
